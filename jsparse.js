@@ -66,6 +66,7 @@ function Tokenizer(s, f, l) {
     this.lookahead = 0;
     this.scanNewlines = false;
     this.scanOperand = true;
+    this.scanCode = false;
     this.filename = f || "";
     this.lineno = l || 1;
 }
@@ -154,7 +155,14 @@ Tokenizer.prototype = {
         if (!input)
             return token.type = END;
 
-        if ((match = fpRegExp(input))) {
+        if (!this.scanCode && (match = /^(.*?)(\<%|$)/(input))) {
+            token.type = BUFFER;
+            token.value = match[1];
+            this.scanCode = true;
+        } else if ((match = /^%\>(.*?)(\<%|$)/(input))) {
+            token.type = BUFFER;
+            token.value = match[1];
+        } else if ((match = fpRegExp(input))) {
             token.type = NUMBER;
             token.value = parseFloat(match[0]);
         } else if ((match = /^0[xX][\da-fA-F]+|^0[0-7]*|^\d+/(input))) {
@@ -216,17 +224,19 @@ function CompilerContext(inFunction) {
     this.stmtStack = [];
     this.funDecls = [];
     this.varDecls = [];
+    this.bufferDecls = [];
 }
 
 var CCp = CompilerContext.prototype;
 CCp.bracketLevel = CCp.curlyLevel = CCp.parenLevel = CCp.hookLevel = 0;
 CCp.ecmaStrictMode = CCp.inForLoopInit = false;
 
-function Script(t, x) {
+function Template(t, x) {
     var n = Statements(t, x);
-    n.type = SCRIPT;
+    n.type = TEMPLATE;
     n.funDecls = x.funDecls;
     n.varDecls = x.varDecls;
+    n.bufferDecls = x.bufferDecls;
     return n;
 }
 
@@ -350,6 +360,11 @@ function Statement(t, x) {
                                   (x.stmtStack.length > 1)
                                   ? STATEMENT_FORM
                                   : DECLARED_FORM);
+
+      case BUFFER:
+        n = new Node(t);
+        x.bufferDecls.push(n);
+        return n;
 
       case LEFT_CURLY:
         n = Statements(t, x);
@@ -612,7 +627,7 @@ function FunctionDefinition(t, x, requireName, functionForm) {
 
     t.mustMatch(LEFT_CURLY);
     var x2 = new CompilerContext(true);
-    f.body = Script(t, x2);
+    f.body = Template(t, x2);
     t.mustMatch(RIGHT_CURLY);
     f.end = t.token.end;
 
@@ -1008,8 +1023,9 @@ loop:
 function parse(s, f, l) {
     var t = new Tokenizer(s, f, l);
     var x = new CompilerContext(false);
-    var n = Script(t, x);
+    var n = Template(t, x);
     if (!t.done)
         throw t.newSyntaxError("Syntax error");
     return n;
 }
+

@@ -72,9 +72,12 @@ var tokens = [
     "(", ")",
 
     // Nonterminal tree node type codes.
-    "SCRIPT", "BLOCK", "LABEL", "FOR_IN", "CALL", "NEW_WITH_ARGS", "INDEX",
+    "TEMPLATE", "BLOCK", "LABEL", "FOR_IN", "CALL", "NEW_WITH_ARGS", "INDEX",
     "ARRAY_INIT", "OBJECT_INIT", "PROPERTY_INIT", "GETTER", "SETTER",
     "GROUP", "LIST",
+
+    // EJS
+    "BUFFER",
 
     // Terminals.
     "IDENTIFIER", "NUMBER", "STRING", "REGEXP",
@@ -136,7 +139,9 @@ var opTypeNames = {
     '{':    "LEFT_CURLY",
     '}':    "RIGHT_CURLY",
     '(':    "LEFT_PAREN",
-    ')':    "RIGHT_PAREN"
+    ')':    "RIGHT_PAREN",
+//    '<%':   "OPEN_EJS",
+//    '%>':   "CLOSE_EJS"
 };
 
 // Hash of keyword identifier to tokens index.  NB: we must null __proto__ to
@@ -167,3 +172,4 @@ for (i = 0, j = assignOps.length; i < j; i++) {
     t = assignOps[i];
     assignOps[t] = tokens[t];
 }
+
