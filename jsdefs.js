@@ -77,7 +77,7 @@ var tokens = [
     "GROUP", "LIST",
 
     // EJS
-    "BUFFER",
+    "BUFFER", "ECHO",
 
     // Terminals.
     "IDENTIFIER", "NUMBER", "STRING", "REGEXP",

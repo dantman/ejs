@@ -67,6 +67,7 @@ function Tokenizer(s, f, l) {
     this.scanNewlines = false;
     this.scanOperand = true;
     this.scanCode = false;
+    this.afterBuffer = false;
     this.filename = f || "";
     this.lineno = l || 1;
 }
@@ -178,6 +179,10 @@ Tokenizer.prototype = {
         } else if (this.scanOperand && (match = reRegExp(input))) {
             token.type = REGEXP;
             token.value = new RegExp(match[1], match[2]);
+        } else if (this.afterBuffer && (match = /^=/(input))) {
+            token.type = ECHO;
+            token.value = '=';
+            token.assignOp = GLOBAL[opTypeNames[op]];
         } else if ((match = opRegExp(input))) {
             var op = match[0];
             if (assignOps[op] && input[op.length] == '=') {
@@ -186,6 +191,7 @@ Tokenizer.prototype = {
                 match[0] += '=';
             } else {
                 token.type = GLOBAL[opTypeNames[op]];
+
                 if (this.scanOperand &&
                     (token.type == PLUS || token.type == MINUS)) {
                     token.type += UNARY_PLUS - PLUS;
@@ -199,6 +205,8 @@ Tokenizer.prototype = {
             throw this.newSyntaxError("Illegal token");
         }
 
+        if( !token || !token.type || token.type == NEWLINE ) {}
+        else this.afterBuffer = token.type == BUFFER;
         token.start = this.cursor;
         this.cursor += match[0].length;
         token.end = this.cursor;
@@ -671,7 +679,7 @@ function ParenExpression(t, x) {
 var opPrecedence = {
     SEMICOLON: 0,
     COMMA: 1,
-    ASSIGN: 2, HOOK: 2, COLON: 2,
+    ECHO: 2, ASSIGN: 2, HOOK: 2, COLON: 2,
     // The above all have to have the same precedence, see bug 330975.
     OR: 4,
     AND: 5,
@@ -696,7 +704,7 @@ for (i in opPrecedence)
 
 var opArity = {
     COMMA: -2,
-    ASSIGN: 2,
+    ASSIGN: 2, ECHO: 2,
     HOOK: 3,
     OR: 2,
     AND: 2,
@@ -766,14 +774,16 @@ loop:
             // NB: cannot be empty, Statement handled that.
             break loop;
 
+          case ECHO:
           case ASSIGN:
           case HOOK:
           case COLON:
-            if (t.scanOperand)
+            if (t.scanOperand && tt != ECHO)
                 break loop;
+            t.scanOperand = false;
             // Use >, not >=, for right-associative ASSIGN and HOOK/COLON.
             while (opPrecedence[operators.top().type] > opPrecedence[tt] ||
-                   (tt == COLON && operators.top().type == ASSIGN)) {
+                   (tt == COLON && ( operators.top().type == ASSIGN || operators.top().type == ECHO ))) {
                 reduce();
             }
             if (tt == COLON) {
@@ -783,10 +793,10 @@ loop:
                 --x.hookLevel;
             } else {
                 operators.push(new Node(t));
-                if (tt == ASSIGN)
-                    operands.top().assignOp = t.token.assignOp;
-                else
+                if (tt == HOOK)
                     ++x.hookLevel;      // tt == HOOK
+                else
+                    operands.top().assignOp = t.token.assignOp;
             }
             t.scanOperand = true;
             break;
