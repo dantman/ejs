@@ -347,6 +347,13 @@ function Block(t, x) {
     return n;
 }
 
+function Buffer(t, x) {
+    n = new Node(t);
+    n.type = BUFFER;
+    x.bufferDecls.push(n);
+    return n;
+}
+
 const DECLARED_FORM = 0, EXPRESSED_FORM = 1, STATEMENT_FORM = 2;
 
 function Statement(t, x) {
@@ -362,8 +369,7 @@ function Statement(t, x) {
                                   : DECLARED_FORM);
 
       case BUFFER:
-        n = new Node(t);
-        x.bufferDecls.push(n);
+        n = new Buffer(t, x);
         return n;
 
       case LEFT_CURLY:
@@ -859,9 +865,10 @@ loop:
 
           case NULL: case THIS: case TRUE: case FALSE:
           case IDENTIFIER: case NUMBER: case STRING: case REGEXP:
+          case BUFFER:
             if (!t.scanOperand)
                 break loop;
-            operands.push(new Node(t));
+            operands.push(new Buffer(t, x));
             t.scanOperand = false;
             break;
 
