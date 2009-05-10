@@ -604,7 +604,7 @@ function Statement(t, x) {
 
     if (t.lineno == t.token.lineno) {
         tt = t.peekOnSameLine();
-        if (tt != END && tt != NEWLINE && tt != SEMICOLON && tt != RIGHT_CURLY)
+        if (tt != END && tt != NEWLINE && tt != SEMICOLON && tt != RIGHT_CURLY && tt != BUFFER)
             throw t.newSyntaxError("Missing ; before statement");
     }
     t.match(SEMICOLON);
