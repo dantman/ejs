@@ -1,14 +1,14 @@
-* A ; should not be required before a %> it should be automatic
+* A ; should not be required before a %> it should be automatic (done)
 * Need support for <%=
 * Make tags customizable
 * Isolate code
 * Compile templates
-* Support <% var foo = { label: %>...<% }; %>
-* Support <% var foo = [ %>...<% ]; %>
-* Support <% var foo = %>...<% ; %>
-* Support <% fn( %>...<% ); %>
+* Support <% var foo = { label: %>...<% }; %> (parsed)
+* Support <% var foo = [ %>...<% ]; %> (parsed)
+* Support <% var foo = %>...<% ; %> (parsed)
+* Support <% fn( %>...<% ); %> (parsed)
 * Support <%= fn( %>...<% ); %>
-* Find good syntax for filters and support filter flags
+* Find good syntax for filters and support filter flags (<%@h=foo%>?)
 * Write default h and u (htmlescape, urlencode) filters
 * Provide minimal client distribution
 * Write code for template execution
